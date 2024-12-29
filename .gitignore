@@ -8,3 +8,6 @@
 *.json
 *.xlsx
 *.xls
+
+# Ignore all log files
+.DS_Store
