@@ -21,3 +21,5 @@ __pycache__/
 
 # Ignore all venv files
 .venv/
+
+node_modules
