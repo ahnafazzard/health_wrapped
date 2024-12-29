@@ -8,11 +8,31 @@ class HealthDataExtractor:
     @staticmethod
     def xml_to_dict(element):
         result = {}
+
+        # Add element attributes if any
+        if element.attrib:
+            result.update(element.attrib)
+
+        # Add children elements recursively
         for child in element:
-            if len(child) == 0:
-                result[child.tag] = child.attrib
+            if len(child) > 0:
+                # Element has children, recurse
+                child_data = HealthDataExtractor.xml_to_dict(child)
             else:
-                result[child.tag] = HealthDataExtractor.xml_to_dict(child)
+                # Element has no children
+                child_data = child.attrib
+                if child.text and child.text.strip():
+                    child_data["text"] = child.text.strip()
+
+            if child.tag in result:
+                # If tag already exists, convert to list or append
+                if isinstance(result[child.tag], list):
+                    result[child.tag].append(child_data)
+                else:
+                    result[child.tag] = [result[child.tag], child_data]
+            else:
+                result[child.tag] = child_data
+
         return result
 
     def __init__(self, zip_path: str):

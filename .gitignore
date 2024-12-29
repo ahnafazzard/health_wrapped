@@ -1,5 +1,7 @@
 temp_extract/*
 
+__pycache__/
+
 # Ignore all zip files
 *.zip
 
