@@ -1,0 +1,10 @@
+# Ignore all zip files
+*.zip
+
+# Ignore all csv files
+*.csv
+
+# Ignore all json files
+*.json
+*.xlsx
+*.xls
