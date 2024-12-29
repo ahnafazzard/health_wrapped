@@ -13,3 +13,6 @@ temp_extract/*
 
 # Ignore all log files
 .DS_Store
+
+# Ignore all venv files
+.venv/
