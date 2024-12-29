@@ -1,3 +1,5 @@
+temp_extract/*
+
 # Ignore all zip files
 *.zip
 
