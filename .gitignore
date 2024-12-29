@@ -13,6 +13,9 @@ __pycache__/
 *.xlsx
 *.xls
 
+# Ignore all txt files
+*.txt
+
 # Ignore all log files
 .DS_Store
 
