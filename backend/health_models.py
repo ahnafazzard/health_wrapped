@@ -4,18 +4,18 @@ from datetime import datetime
 
 @dataclass
 class BaseHealthRecord:
-    creationDate: datetime
-    startDate: datetime
-    endDate: datetime
+    creation_date: datetime
+    start_date: datetime
+    end_date: datetime
 
     def __init__(self, record: dict):
-        self.creationDate = datetime.strptime(
+        self.creation_date = datetime.strptime(
             record.get("creationDate"), "%Y-%m-%d %H:%M:%S %z"
         )
-        self.startDate = datetime.strptime(
+        self.start_date = datetime.strptime(
             record.get("startDate"), "%Y-%m-%d %H:%M:%S %z"
         )
-        self.endDate = datetime.strptime(record.get("endDate"), "%Y-%m-%d %H:%M:%S %z")
+        self.end_date = datetime.strptime(record.get("endDate"), "%Y-%m-%d %H:%M:%S %z")
 
 
 @dataclass
@@ -31,11 +31,13 @@ class DistanceWalkingRunningRecord(BaseHealthRecord):
 
 @dataclass
 class StepCountRecord(BaseHealthRecord):
-    count: int
+    unit: str
+    value: float
 
     def __init__(self, record: dict):
         super().__init__(record)
-        self.count = int(record.get("value"))
+        self.unit = "step(s)"
+        self.value = int(record.get("value"))
 
 
 @dataclass
