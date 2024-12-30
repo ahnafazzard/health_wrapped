@@ -1,4 +1,7 @@
-from typing import Any, Dict
+from datetime import datetime
+from itertools import groupby
+from operator import itemgetter
+from typing import Any, Dict, List, Tuple
 
 from health_models import (
     ActiveEnergyBurnedRecord,
@@ -53,117 +56,142 @@ class HealthRecords:
             )
         )
 
+    def _filter_records_by_year(
+        self, records: List[Any], year: int = datetime.now().year
+    ) -> List[Any]:
+        if not year:
+            year = datetime.now().year
+        return [record for record in records if record.start_date.year == year]
+
+    def get_total_steps_for_year(
+        self, year: int = datetime.now().year
+    ) -> Tuple[int, str]:
+        yearly_records = self._filter_records_by_year(self.StepCount_records, year)
+        unit = set(yearly_record.unit for yearly_record in yearly_records)
+        if len(unit) > 1:
+            raise ValueError("Multiple units found")
+        unit = unit.pop()
+        return sum(int(record.value) for record in yearly_records), unit
+
+    def get_total_distance_for_year(
+        self, year: int = datetime.now().year
+    ) -> Tuple[float, str]:
+        yearly_records = self._filter_records_by_year(
+            self.DistanceWalkingRunning_records, year
+        )
+        unit = set(yearly_record.unit for yearly_record in yearly_records)
+        if len(unit) > 1:
+            raise ValueError("Multiple units found")
+        unit = unit.pop()
+        return round(sum(float(record.value) for record in yearly_records), 2), unit
+
+    def get_total_calories_for_year(
+        self, year: int = datetime.now().year
+    ) -> Tuple[float, str]:
+        yearly_records = self._filter_records_by_year(
+            self.ActiveEnergyBurned_records, year
+        )
+        unit = set(yearly_record.unit for yearly_record in yearly_records)
+        if len(unit) > 1:
+            raise ValueError("Multiple units found")
+        unit = unit.pop()
+        return round(sum(float(record.value) for record in yearly_records), 2), unit
+
+    def get_average_vo2max(self, year: int = datetime.now().year) -> Tuple[float, str]:
+        yearly_records = self._filter_records_by_year(self.VO2Max_records, year)
+        if not yearly_records:
+            return 0.0
+        unit = set(yearly_record.unit for yearly_record in yearly_records)
+        if len(unit) > 1:
+            raise ValueError("Multiple units found")
+        unit = unit.pop()
+        return (
+            round(
+                sum(float(record.value) for record in yearly_records)
+                / len(yearly_records),
+                2,
+            ),
+            unit,
+        )
+
+    def get_stats_by_week(self, year: int = datetime.now().year) -> List[Dict]:
+        steps = self._filter_records_by_year(self.StepCount_records, year)
+
+        # Group by week number
+        def get_week(record):
+            # date = datetime.strptime(record.start_date, "%Y-%m-%d %H:%M:%S %z")
+            # return date.isocalendar()[1]
+            return record.start_date.isocalendar()[1]
+
+        weekly_stats = []
+        for week, records in groupby(sorted(steps, key=get_week), key=get_week):
+            records_list = list(records)
+            total_steps = sum(int(record.value) for record in records_list)
+            weekly_stats.append(
+                {
+                    "week": week,
+                    "total_steps": total_steps,
+                    "start_date": min(r.start_date for r in records_list),
+                    "end_date": max(r.end_date for r in records_list),
+                }
+            )
+
+        return weekly_stats
+
+    def get_best_week(self, year: int = datetime.now().year) -> Dict:
+        weekly_stats = self.get_stats_by_week(year)
+        if not weekly_stats:
+            return {}
+        return max(weekly_stats, key=itemgetter("total_steps"))
+
 
 if __name__ == "__main__":
-    health_data = {
-        "Record": [
-            {
-                "type": "HKQuantityTypeIdentifierDistanceWalkingRunning",
-                "sourceName": "Mushfiqur's iPhone",
-                "sourceVersion": "15.0",
-                "device": "<<HKDevice: 0x301b13ca0>, name:iPhone, manufacturer:Apple Inc., model:iPhone, hardware:iPhone12,3, software:15.0, creation date:2021-09-22 17:33:35 +0000>",
-                "unit": "km",
-                "creationDate": "2021-10-13 06:52:09 -0500",
-                "startDate": "2021-10-13 06:39:32 -0500",
-                "endDate": "2021-10-13 06:49:32 -0500",
-                "value": "0.0804713",
+
+    import json
+
+    with open("sample_data/export.json", "r") as f:
+        health_data_sample = json.load(f)
+
+    records = HealthRecords(health_data_sample)
+
+    year = 2024
+
+    weekly_stats_l = records.get_stats_by_week(year=year)
+    weekly_stats_l = list(
+        map(
+            lambda x: {
+                k: v.strftime("%Y-%m-%d") if isinstance(v, datetime) else v
+                for k, v in x.items()
             },
-            {
-                "type": "HKQuantityTypeIdentifierDistanceWalkingRunning",
-                "sourceName": "Mushfiqur's iPhone",
-                "sourceVersion": "15.0",
-                "device": "<<HKDevice: 0x301b13ca0>, name:iPhone, manufacturer:Apple Inc., model:iPhone, hardware:iPhone12,3, software:15.0, creation date:2021-09-22 17:33:35 +0000>",
-                "unit": "km",
-                "creationDate": "2021-10-13 07:02:07 -0500",
-                "startDate": "2021-10-13 06:51:05 -0500",
-                "endDate": "2021-10-13 06:54:18 -0500",
-                "value": "0.0287828",
-            },
-            {
-                "type": "HKQuantityTypeIdentifierStepCount",
-                "sourceName": "Mushfiqur\u2019s Apple\u00a0Watch",
-                "sourceVersion": "8.0",
-                "device": "<<HKDevice: 0x301b11310>, name:Apple Watch, manufacturer:Apple Inc., model:Watch, hardware:Watch6,1, software:8.0, creation date:2021-09-25 06:03:07 +0000>",
-                "unit": "count",
-                "creationDate": "2021-10-14 05:52:39 -0500",
-                "startDate": "2021-10-14 05:40:38 -0500",
-                "endDate": "2021-10-14 05:50:39 -0500",
-                "value": "207",
-            },
-            {
-                "type": "HKQuantityTypeIdentifierStepCount",
-                "sourceName": "Mushfiqur\u2019s Apple\u00a0Watch",
-                "sourceVersion": "8.0",
-                "device": "<<HKDevice: 0x301b11310>, name:Apple Watch, manufacturer:Apple Inc., model:Watch, hardware:Watch6,1, software:8.0, creation date:2021-09-25 06:03:07 +0000>",
-                "unit": "count",
-                "creationDate": "2021-10-14 06:02:36 -0500",
-                "startDate": "2021-10-14 05:52:09 -0500",
-                "endDate": "2021-10-14 06:01:40 -0500",
-                "value": "419",
-            },
-            {
-                "type": "HKQuantityTypeIdentifierVO2Max",
-                "sourceName": "Mushfiqur\u2019s Apple\u00a0Watch",
-                "sourceVersion": "2663.1.1",
-                "unit": "mL/min\u00b7kg",
-                "creationDate": "2021-10-12 16:39:43 -0500",
-                "startDate": "2021-10-12 16:39:43 -0500",
-                "endDate": "2021-10-12 16:39:43 -0500",
-                "value": "38.57",
-                "MetadataEntry": [
-                    {"key": "HKVO2MaxTestType", "value": "2"},
-                    {"key": "HKMetadataKeySyncVersion", "value": "1"},
-                    {
-                        "key": "HKMetadataKeySyncIdentifier",
-                        "value": "1A4C8486-A435-4192-8492-BD41E63BB6FC",
-                    },
-                ],
-            },
-            {
-                "type": "HKQuantityTypeIdentifierVO2Max",
-                "sourceName": "Mushfiqur\u2019s Apple\u00a0Watch",
-                "sourceVersion": "2664.0.8.1.1",
-                "unit": "mL/min\u00b7kg",
-                "creationDate": "2021-10-31 14:23:53 -0500",
-                "startDate": "2021-10-31 14:23:52 -0500",
-                "endDate": "2021-10-31 14:23:52 -0500",
-                "value": "39.14",
-                "MetadataEntry": [
-                    {"key": "HKVO2MaxTestType", "value": "2"},
-                    {"key": "HKMetadataKeySyncVersion", "value": "1"},
-                    {
-                        "key": "HKMetadataKeySyncIdentifier",
-                        "value": "332884B7-202B-410F-9587-837DC7DB32F3",
-                    },
-                ],
-            },
-            {
-                "type": "HKQuantityTypeIdentifierActiveEnergyBurned",
-                "sourceName": "Mushfiqur\u2019s Apple\u00a0Watch",
-                "sourceVersion": "8.0",
-                "device": "<<HKDevice: 0x301b10dc0>, name:Apple Watch, manufacturer:Apple Inc., model:Watch, hardware:Watch6,1, software:8.0, creation date:2021-09-25 06:03:07 +0000>",
-                "unit": "Cal",
-                "creationDate": "2021-10-13 22:23:32 -0500",
-                "startDate": "2021-10-13 22:20:30 -0500",
-                "endDate": "2021-10-13 22:21:31 -0500",
-                "value": "0.45",
-            },
-            {
-                "type": "HKQuantityTypeIdentifierActiveEnergyBurned",
-                "sourceName": "Mushfiqur\u2019s Apple\u00a0Watch",
-                "sourceVersion": "8.0",
-                "device": "<<HKDevice: 0x301b10dc0>, name:Apple Watch, manufacturer:Apple Inc., model:Watch, hardware:Watch6,1, software:8.0, creation date:2021-09-25 06:03:07 +0000>",
-                "unit": "Cal",
-                "creationDate": "2021-10-13 22:23:32 -0500",
-                "startDate": "2021-10-13 22:21:31 -0500",
-                "endDate": "2021-10-13 22:22:33 -0500",
-                "value": "0.414",
-            },
-        ]
+            weekly_stats_l,
+        )
+    )
+    best_week = records.get_best_week(year=year)
+    best_week = {
+        k: v.strftime("%Y-%m-%d") if isinstance(v, datetime) else v
+        for k, v in best_week.items()
     }
 
-    records = HealthRecords(health_data)
-    print(records.DistanceWalkingRunning_records)
-    print(records.StepCount_records)
-    print(records.VO2Max_records)
-    print(records.ActiveEnergyBurned_records)
+    d = {
+        f"get_total_steps_for_year_{year}": " ".join(
+            map(str, records.get_total_steps_for_year(year=year))
+        ),
+        f"get_total_distance_for_year_{year}": " ".join(
+            map(str, records.get_total_distance_for_year(year=year))
+        ),
+        f"get_total_calories_for_year_{year}": " ".join(
+            map(str, records.get_total_calories_for_year(year=year))
+        ),
+        f"get_average_vo2max_{year}": " ".join(
+            map(str, records.get_average_vo2max(year=year))
+        ),
+        f"get_stats_by_week_{year}": weekly_stats_l,
+        f"get_best_week_{year}": best_week,
+    }
+
+    output = json.dumps(d, indent=2, ensure_ascii=False)
+
+    print(output)
+
+    with open("logfiles/test_health_records_log.json", "w") as f:
+        f.write(output)
