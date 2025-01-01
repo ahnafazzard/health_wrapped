@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Upload Test</title>
+    <style>
+        body {
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .success {
+            background: #e6ffe6;
+            color: #006600;
+        }
+
+        .error {
+            background: #ffe6e6;
+            color: #660000;
+        }
+
+        .log {
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- <h2>API Test</h2> -->
+
+    <!-- Test API Connection -->
+    <!-- <button onclick="testAPI()">Test API Connection</button> -->
+    <!-- <div id="apiResult" class="result"></div> -->
+
+    <!-- <hr> -->
+
+    <!-- File Upload -->
+    <!-- <h3>File Upload Test</h3> -->
+    <!-- <input type="file" id="fileInput" accept=".zip"> -->
+    <!-- <button onclick="uploadFile()">Upload</button> -->
+    <!-- <div id="uploadResult" class="result"></div> -->
+
+    <!-- <hr> -->
+    <!-- File Upload -->
+    <h3>Metrics Test</h3>
+    <input type="file" id="fileInput2" accept=".zip">
+    <button onclick="getMetrics()">Upload</button>
+    <div id="uploadResult2" class="result"></div>
+
+    <hr>
+    <h3>Debug Log</h3>
+    <div id="debugLog" class="log"></div>
+
+    <script>
+        function log(message) {
+            const debugLog = document.getElementById('debugLog');
+            const timestamp = new Date().toISOString();
+            debugLog.innerHTML += `${timestamp}: ${message}\n`;
+        }
+
+        async function testAPI() {
+            const result = document.getElementById('apiResult');
+            log('Testing API connection...');
+
+            try {
+                const response = await fetch('http://localhost:8000/test', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                });
+
+                log(`Response status: ${response.status}`);
+                log(`Response headers: ${JSON.stringify([...response.headers])}`);
+
+                const data = await response.json();
+                result.textContent = 'API Test Success: ' + JSON.stringify(data);
+                result.className = 'result success';
+                log('API test successful');
+            } catch (error) {
+                result.textContent = 'API Test Failed: ' + error.message;
+                result.className = 'result error';
+                log(`API test failed: ${error.message}`);
+                console.error('Error details:', error);
+            }
+        }
+
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const result = document.getElementById('uploadResult');
+
+            if (!fileInput.files[0]) {
+                result.textContent = 'Please select a file first';
+                result.className = 'result error';
+                return;
+            }
+
+            log('Preparing to upload file...');
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                log('Sending upload request...');
+                const response = await fetch('http://localhost:8000/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                log(`Upload response status: ${response.status}`);
+                log(`Upload response headers: ${JSON.stringify([...response.headers])}`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                result.textContent = 'Upload Success: ' + JSON.stringify(data);
+                result.className = 'result success';
+                log('Upload successful');
+            } catch (error) {
+                result.textContent = 'Upload Failed: ' + error.message;
+                result.className = 'result error';
+                log(`Upload failed: ${error.message}`);
+                console.error('Error details:', error);
+            }
+        }
+
+        async function getMetrics() {
+            const fileInput = document.getElementById('fileInput2');
+            const result = document.getElementById('uploadResult2');
+
+            if (!fileInput.files[0]) {
+                result.textContent = 'Please select a file first';
+                result.className = 'result error';
+                return;
+            }
+
+            log('Preparing to upload file...');
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                log('Sending upload request...');
+                const response = await fetch('http://localhost:8000/api/upload_health_data', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                log(`Upload response status: ${response.status}`);
+                log(`Upload response headers: ${JSON.stringify([...response.headers])}`);
+
+                // Get the response text regardless of status
+                const responseText = await response.text();
+                log(`Response text: ${responseText}`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}, response: ${responseText}`);
+                }
+
+                // Try to parse as JSON if the response was ok
+                const data = JSON.parse(responseText);
+                result.textContent = 'Upload Success: ' + JSON.stringify(data, null, 2);
+                result.className = 'result success';
+                log('Upload successful');
+            } catch (error) {
+                result.textContent = 'Upload Failed: ' + error.message;
+                result.className = 'result error';
+                log(`Upload failed: ${error.message}`);
+                console.error('Error details:', error);
+            }
+        }
+    </script>
+</body>
+
+</html>
