@@ -1,6 +1,9 @@
 temp_extract/*
 
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
 
 # Ignore all zip files
 *.zip
@@ -16,10 +19,17 @@ __pycache__/
 # Ignore all txt files
 *.txt
 
-# Ignore all log files
+# IDE
+.vscode/
+.idea/
+*.swp
 .DS_Store
 
 # Ignore all venv files
 .venv/
+.env/
+
+# Conda
+.conda/
 
 node_modules

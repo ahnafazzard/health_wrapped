@@ -1,4 +1,5 @@
 import json
+import shutil
 import xml.etree.ElementTree as ET
 import zipfile
 from pathlib import Path
@@ -48,6 +49,7 @@ class HealthDataExtractor:
         tree = ET.parse(xml_path)
         root = tree.getroot()
         self.data = self.xml_to_dict(root)
+        shutil.rmtree("temp_extract")
 
     def get_data_dict(self):
         return self.data
@@ -58,5 +60,6 @@ class HealthDataExtractor:
 
 # Example usage
 if __name__ == "__main__":
-    extractor = HealthDataExtractor("export.zip")
-    print(extractor.get_data_json())
+    extractor = HealthDataExtractor("sample_data/export.zip")
+    with open("sample_data/export.json", "w") as f:
+        f.write(extractor.get_data_json())
