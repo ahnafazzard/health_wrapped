@@ -257,5 +257,5 @@ if __name__ == "__main__":
     output = json.dumps(results, indent=2)
     print(output)
 
-    with open("logfiles/test_workout_records_log.json", "w") as f:
+    with open("sample_data/test_workout_records_log.json", "w") as f:
         f.write(output)

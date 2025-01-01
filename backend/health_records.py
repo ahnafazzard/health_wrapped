@@ -193,5 +193,5 @@ if __name__ == "__main__":
 
     print(output)
 
-    with open("logfiles/test_health_records_log.json", "w") as f:
+    with open("sample_data/test_health_records_log.json", "w") as f:
         f.write(output)
